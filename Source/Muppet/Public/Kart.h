@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/BoxComponent.h"
+#include "Components/TimelineComponent.h"
 #include "GameFramework/Pawn.h"
 #include "Kart.generated.h"
 
@@ -12,6 +13,8 @@ class UBoxComponent;
 class USpringArmComponent;
 class UCameraComponent;
 class USceneComponent;
+class UTimelineComponent;
+class UCurveFloat;
 
 UCLASS()
 class MUPPET_API AKart : public APawn
@@ -21,6 +24,12 @@ class MUPPET_API AKart : public APawn
 public:
 	// Sets default values for this pawn's properties
 	AKart();
+
+	UPROPERTY(EditAnywhere, Category = "Animation")
+	TObjectPtr<UCurveFloat> BounceCurve;
+
+	UPROPERTY()
+	TObjectPtr<UTimelineComponent> BounceTimeline; 
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Kart", meta=(AllowPrivateAccess=true))
 	TObjectPtr<UStaticMeshComponent> KartMesh;
@@ -81,6 +90,8 @@ public:
 	
 	UPROPERTY(EditAnywhere, Category = "Bounce")
 	float BounceStrength = 500.0f;
+
+	
 	
 
 protected:
@@ -89,13 +100,25 @@ protected:
 	void SuspensionCast(const FVector&, const FVector&) const;
 	void SetAccelerationAndMass();
 	void ApplySteeringStabilization();
+	void PlayHitKart();
+
+	UFUNCTION()
+	void UpdateHitKart(float Value);
+
+	UFUNCTION()
+	void FinishHitKart();
 
 	TArray<TObjectPtr<USceneComponent>> Wheels;
 	float AccelerationInput;
 	float SteeringInput;
 	float CurrentSpeed;
+	float InitialYaw;
 	bool JumpInput;
 	bool bIsGrounded;
+	FVector StartLocation;
+	FRotator StartRotation;
+	FVector CameraSavedLocation;
+	FRotator CameraSavedRotation;
 
 public:
 	// Called every frame
@@ -103,6 +126,10 @@ public:
 	void Accelerate(float Value);
 	void Steering(float Value);
 	void Jump(bool Value);
+	void FireFirstItem(bool Value);
 	bool IsGrounded();
 	void BounceOnKart(const FHitResult&) const;
+	
+
+	
 };

@@ -35,23 +35,42 @@ AKart::AKart()
 
 	Wheel_BR = CreateDefaultSubobject<USceneComponent>(TEXT("Wheel_BR"));
 	Wheel_BR->SetupAttachment(RootComponent);
+
+	BounceTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("BounceTimeline"));
 }
 
 // Called when the game starts or when spawned
 void AKart::BeginPlay()
 {
+	FOnTimelineFloat OnTimelineCallback;
+	FOnTimelineEventStatic OnTimelineFinishedCallback;
 	Super::BeginPlay();
 
 	Wheels.Add(Wheel_FL);
 	Wheels.Add(Wheel_FR);
 	Wheels.Add(Wheel_BL);
 	Wheels.Add(Wheel_BR);
+
+
+	if (BounceCurve != nullptr)
+	{
+		BounceTimeline->SetLooping(false);
+		BounceTimeline->SetTimelineLength(1.0f);
+		OnTimelineCallback.BindUFunction(this, FName{TEXT("UpdateHitKart")});
+		OnTimelineFinishedCallback.BindUFunction(this, FName{TEXT("FinishHitKart")});
+		BounceTimeline->AddInterpFloat(BounceCurve, OnTimelineCallback);
+		BounceTimeline->SetTimelineFinishedFunc(OnTimelineFinishedCallback);
+	}
 }
 
 // Called every frame
 void AKart::Tick(const float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	if (BounceTimeline != nullptr)
+	{
+		BounceTimeline->TickComponent(DeltaTime, ELevelTick::LEVELTICK_TimeOnly, nullptr);
+	}
 	for (const TObjectPtr<USceneComponent> Wheel : Wheels)
 	{
 		FVector WheelLocation = Wheel->GetComponentLocation();
@@ -114,6 +133,35 @@ void AKart::ApplySteeringStabilization()
 	Box->AddForce(LateralForce);
 }
 
+void AKart::PlayHitKart()
+{
+	StartLocation = Box->GetComponentLocation();
+	StartRotation = Box->GetComponentRotation();
+	InitialYaw = StartRotation.Yaw;
+	Camera->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
+	BounceTimeline->PlayFromStart();
+}
+
+void AKart::UpdateHitKart(float Value)
+{
+	// Saut
+	FVector NewLocation = StartLocation + FVector(0, 0, FMath::Sin(Value * PI) * 50.0f);
+	Box->SetWorldLocation(NewLocation);
+
+	// Rotation 360°
+	
+	float NewYaw = FMath::Lerp(InitialYaw,InitialYaw + 360,Value);
+	FRotator NewRotation = FRotator(StartRotation.Pitch, NewYaw, StartRotation.Roll);
+	Box->SetWorldRotation(NewRotation);
+}
+
+void AKart::FinishHitKart()
+{
+	Camera->AttachToComponent(SpringArm, FAttachmentTransformRules::KeepWorldTransform);
+	Camera->SetRelativeLocation(FVector(0, 0, 0));
+	
+}
+
 void AKart::Accelerate(const float Value)
 {
 	AccelerationInput = Value;
@@ -138,6 +186,15 @@ void AKart::Jump(bool Value)
 	{
 		Box->AddImpulse(FVector(0, 0, ImpulseJump), "None", true);
 	}
+}
+
+void AKart::FireFirstItem(bool Value)
+{
+	if (Value && BounceCurve)
+	{
+		PlayHitKart();
+	}
+
 }
 
 bool AKart::IsGrounded()

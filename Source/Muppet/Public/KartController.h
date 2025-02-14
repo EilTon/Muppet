@@ -39,9 +39,13 @@ private:
 	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly ,Category = "Enhanced Input",meta=(AllowPrivateAccess="true"))
 	TObjectPtr<UInputAction> IA_Jump;
 
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly ,Category = "Enhanced Input",meta=(AllowPrivateAccess="true"))
+	TObjectPtr<UInputAction> IA_FireItem1;
+
 	TObjectPtr<AKart> ControllerKart;
 
 	void AccelerateAction(const FInputActionValue& Value);
 	void SteeringAction(const FInputActionValue& Value);
 	void JumpAction(const FInputActionValue& Value);
+	void FireItem1Action(const FInputActionValue& Value);
 };

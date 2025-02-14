@@ -22,6 +22,7 @@ void AKartController::SetupInputComponent()
 		EnhancedInputComponent->BindAction(IA_Accelerate, ETriggerEvent::Triggered, this, &AKartController::AccelerateAction);
 		EnhancedInputComponent->BindAction(IA_Steering, ETriggerEvent::Triggered, this, &AKartController::SteeringAction);
 		EnhancedInputComponent->BindAction(IA_Jump, ETriggerEvent::Triggered, this, &AKartController::JumpAction);
+		EnhancedInputComponent->BindAction(IA_FireItem1, ETriggerEvent::Triggered, this, &AKartController::FireItem1Action);
 	}
 }
 
@@ -46,5 +47,13 @@ void AKartController::JumpAction(const FInputActionValue& Value)
 	if (ControllerKart)
 	{
 		ControllerKart->Jump(Value.Get<bool>());
+	}
+}
+
+void AKartController::FireItem1Action(const FInputActionValue& Value)
+{
+	if (ControllerKart)
+	{
+		ControllerKart->FireFirstItem(Value.Get<bool>());
 	}
 }
